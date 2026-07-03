@@ -1,0 +1,25 @@
+# Sekrety — NIGDY na GitHub
+.env
+*.env
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+env/
+*.egg-info/
+
+# Dane generowane
+partners.csv
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Node (frontend)
+node_modules/
+dist/

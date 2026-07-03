@@ -1,0 +1,14 @@
+# OpenAI Agents SDK — framework agentowy
+openai-agents
+
+# API web
+fastapi
+uvicorn[standard]
+
+# Narzędzia (tools)
+requests
+beautifulsoup4
+
+# Konfiguracja i walidacja
+python-dotenv
+pydantic

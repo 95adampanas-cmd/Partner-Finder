@@ -16,9 +16,19 @@
 **Decyzja:** Przepisać logikę z `openai.chat.completions` na framework Agents SDK.
 **Powód:** Nauka narzędzia branżowego; mniej boilerplate'u (pętla tool-calls, orkiestracja agentów).
 
+## 2026-07-04 — Zakres: 2 tryby zamiast 1, wspólny silnik oceny
+**Decyzja:** Produkt ma 2 tryby wejścia (Tryb 1: od URL → oceń + znajdź do 10 podobnych;
+Tryb 2: od kryteriów miasto+województwo+branża → znajdź do 10 firm), ale **jeden wspólny
+silnik oceny**. Pierwotne „tryby 1 i 2" (oba: znajdź podobne) scalone w jeden.
+**Powód:** Oba dawne tryby robiły to samo (szukaj podobnych + oceń) — bez sensu dublować.
+Rdzeń (scrape → scoring → zapis) jest wspólny; tryby różnią się tylko źródłem listy firm.
+
 ---
 
 ## Do rozstrzygnięcia (otwarte)
+
+### Definicja „podobnej firmy" (Tryb 1)
+Jak szukać firm „podobnych" do podanego URL? Ta sama branża? Region? Oba? — decyzja później.
 
 ### Faza 2 — które API do szukania partnerów?
 Clutch i Google **nie pozwalają na zwykły scraping**. Opcje:

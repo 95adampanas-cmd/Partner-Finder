@@ -13,24 +13,39 @@ Ręczne szukanie i ocenianie takich firm jest wolne. Chcemy to zautomatyzować.
 
 ## 2. Cel produktu
 
-Narzędzie, które:
-1. Dostaje URL firmy → ocenia jej potencjał partnerski (score 1–10 + uzasadnienie).
-2. Znajduje **podobne** firmy-partnerów w sieci (Google / Clutch / Google Maps).
-3. Zapisuje dobrych partnerów (score ≥ 7) do bazy.
-4. Jest dostępne przez prostą stronę web z brandingiem Last Agency.
+Narzędzie działa w **2 trybach**, ale ma **jeden wspólny silnik oceny**
+(scrape strony → scoring 1–10 + uzasadnienie → zapis dobrych partnerów).
+Tryby różnią się tylko tym, **skąd biorą listę firm do oceny**:
+
+- **Tryb 1 — od firmy:** podajesz URL firmy → (opcjonalnie oceniamy ją) i znajdujemy
+  do **10 podobnych** firm, oceniając każdą.
+- **Tryb 2 — od kryteriów:** podajesz **miasto + województwo + branżę** → znajdujemy
+  do **10 firm** pasujących do kryteriów i oceniamy każdą.
+
+Dobrzy partnerzy (score ≥ 7) trafiają do bazy (CSV). Całość dostępna przez stronę web z brandingiem Last Agency.
 
 ## 3. Użytkownik
 
-- **Główny:** PM / sprzedaż w Last Agency — wkleja URL, dostaje ocenę i listę leadów.
+- **Główny:** PM / sprzedaż w Last Agency — podaje firmę **lub** kryteria (miasto/branża),
+  dostaje listę ocenionych leadów partnerskich.
 
 ## 4. Zakres (MVP)
 
-**W zakresie:**
-- Ocena pojedynczej firmy po URL (agent + tool scrapujący stronę).
-- Evaluator sprawdzający jakość oceny (druga para oczu AI).
-- Zapis dobrych partnerów do CSV.
-- Tool: szukanie podobnych firm.
-- Frontend web: pole na URL → wynik oceny.
+**Wspólny silnik oceny (rdzeń):**
+- Tool `scrape_website` — pobiera treść strony firmy.
+- Agent oceniający — scoring 1–10 + uzasadnienie wg kryteriów (sekcja 5).
+- Evaluator — druga para oczu AI, sprawdza jakość oceny.
+- Tool `save_partner` — zapis dobrych partnerów (score ≥ 7) do CSV.
+
+**Trzy „wejścia" produkujące listę firm do oceny:**
+- Tryb 1: z URL → znajdź do 10 podobnych (definicja „podobne" — TBD, patrz niżej).
+- Tryb 2: z miasta + województwa + branży → znajdź do 10 firm.
+- Tool wyszukujący firmy (Google / Clutch / Google Maps — API do wyboru, patrz DECISIONS.md).
+
+**Frontend web:** wybór trybu → formularz → lista ocenionych firm.
+
+**⚠️ Do doprecyzowania (open questions):**
+- Definicja „podobnej firmy" w trybie 1 (ta sama branża? region? oba?) — decyzja później.
 
 **Poza zakresem (na razie):**
 - Logowanie/konta użytkowników.

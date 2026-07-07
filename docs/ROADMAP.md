@@ -9,12 +9,12 @@
 - ✅ Pierwszy commit + push na GitHub
 
 ## Faza 1 — Przepisanie na OpenAI Agents SDK 🟡
-- 🟡 Przeniesienie logiki ze starego notebooka (`project.ipynb`) do `backend/main.ipynb`
-- 🟡 Tool `scrape_website` na `@function_tool`
-- ⬜ Tool `save_partner` (zapis do CSV)
-- ⬜ Agent oceniający
+- ✅ Tool `scrape_website` na `@function_tool`
+- ✅ Tool `save_partner` (zapis do CSV)
+- ✅ Agent oceniający (`Agent` + `Runner`) — działa w notebooku
+- 🟡 Kalibracja promptu scoringowego (kategorie, mocne sygnały, kotwica Tebim)
 - ⬜ Agent evaluator (jako guardrail lub osobny agent)
-- ⬜ Uruchomienie przez `Runner` — działa w notebooku
+- ⬜ Drobne porządki: nazwa pliku CSV → `partners.csv`, usunąć `print` z narzędzi
 
 ## Faza 2 — Nowe tools: szukanie firm (2 tryby) ⬜
 - ⬜ Decyzja: które API (Google Places / SerpAPI / Custom Search) — patrz DECISIONS.md
@@ -36,4 +36,5 @@
 
 ---
 
-**Aktualnie pracujemy nad:** Faza 1 — piszemy narzędzia (tools) w `main.ipynb`
+**Aktualnie pracujemy nad:** Faza 1 — kalibracja promptu scoringowego, potem evaluator
+

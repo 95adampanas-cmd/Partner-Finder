@@ -23,3 +23,6 @@ Thumbs.db
 # Node (frontend)
 node_modules/
 dist/
+
+# Wszystkie dane CSV (nie tylko partners.csv)
+*.csv

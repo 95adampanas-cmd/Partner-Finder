@@ -27,8 +27,23 @@ Rdzeń (scrape → scoring → zapis) jest wspólny; tryby różnią się tylko 
 
 ## Do rozstrzygnięcia (otwarte)
 
+### Kto wyzwala zapis partnera — agent czy user?
+W wersji CLI (Faza 1) **agent** sam zapisuje partnerów ze score ≥ 7 przez `save_partner`.
+W wersji z frontem (Faza 3) alternatywa: to **user klika „Zapisz lead"** na ekranie
+(więcej kontroli). Do rozstrzygnięcia przy budowie frontu.
+
 ### Definicja „podobnej firmy" (Tryb 1)
 Jak szukać firm „podobnych" do podanego URL? Ta sama branża? Region? Oba? — decyzja później.
+
+### Rozszerzenie zakresu: zbieranie kontaktów + output jako tabela (Faza 2/3)
+Docelowa wizja (z metodologii Growth & Partnerships Lead) chce dla każdej firmy:
+telefon, mail, LinkedIn osoby decyzyjnej oraz output jako **tabelę do arkusza**
+(Nazwa | Kategoria | Miasto | Województwo | Telefon | Mail | LinkedIn | Model | Uzasadnienie).
+- Telefon/mail często SĄ na stronie → agent może je wyciągnąć ze scrape (częściowo działa już dziś).
+- LinkedIn osoby decyzyjnej + pewne dane kontaktowe → wymaga **nowych narzędzi** (search / LinkedIn) → Faza 2/3.
+- Pomysł na tool `check_financials` (bizraport.pl / KRS) → weryfikacja skali/liczby klientów (poza stroną).
+➡️ Na razie: agent podaje kontakt TYLKO jeśli jest na scrapowanej stronie i NIE zmyśla.
+   Pełna tabela + LinkedIn + financials — po dołożeniu narzędzi.
 
 ### Faza 2 — które API do szukania partnerów?
 Clutch i Google **nie pozwalają na zwykły scraping**. Opcje:

@@ -8,13 +8,14 @@
 - ✅ Struktura folderów + dokumenty PM (PRD, ROADMAP, DECISIONS, BRAND)
 - ✅ Pierwszy commit + push na GitHub
 
-## Faza 1 — Przepisanie na OpenAI Agents SDK 🟡
+## Faza 1 — Przepisanie na OpenAI Agents SDK ✅
 - ✅ Tool `scrape_website` na `@function_tool`
 - ✅ Tool `save_partner` (zapis do CSV)
 - ✅ Agent oceniający (`Agent` + `Runner`) — działa w notebooku
-- 🟡 Kalibracja promptu scoringowego (kategorie, mocne sygnały, kotwica Tebim)
-- ⬜ Agent evaluator (jako guardrail lub osobny agent)
-- ⬜ Drobne porządki: nazwa pliku CSV → `partners.csv`, usunąć `print` z narzędzi
+- ✅ Kalibracja promptu scoringowego (kategorie, mocne sygnały, kotwica Tebim: 6→9)
+- ✅ Agent evaluator (`agent_evaluator`, `output_type=Evaluator`) + `agent_rerun`
+- ✅ Orkiestracja: `evaluator()`, `rerun()`, `run()` — pełny przepływ agent → evaluator → rerun
+- ✅ Porządki: `partners.csv`, usunięty `print` z narzędzi, poprawiony prompt evaluatora
 
 ## Faza 2 — Nowe tools: szukanie firm (2 tryby) ⬜
 - ⬜ Decyzja: które API (Google Places / SerpAPI / Custom Search) — patrz DECISIONS.md
@@ -36,5 +37,5 @@
 
 ---
 
-**Aktualnie pracujemy nad:** Faza 1 — kalibracja promptu scoringowego, potem evaluator
+**Aktualnie pracujemy nad:** Faza 2 — narzędzie `search_companies` (najpierw decyzja o API)
 

@@ -106,8 +106,25 @@ KRYTERIA KWALIFIKACJI:
 - Potencjał wolumenu (liczba klientów, częstotliwość projektów)
 - Wiarygodność (opinie, lata działania, referencje)
 
+SYNERGIA / PROPOZYCJA WARTOŚCI (dopasuj do kategorii firmy — WSKAŻ, dlaczego TA firma zyska na partnerstwie):
+Argumenty uniwersalne (dla każdej firmy):
+- Budowanie MRR/LTV: referral/white-label = powtarzalny przychód, klient zostaje dłużej.
+- Prowizja, która ucieka: brak polecenia = utracony przychód (zgarnie go ktoś inny).
+- Cementowanie relacji: dokładając brakującą usługę pod ich marką, partner mocniej wiąże klienta.
+- Bezpieczny partner: nie zabieramy klienta, oddajemy z powrotem (inaczej niż agencja 360).
+- Nowy kanał GEO/AI Search pod ich marką (klienci pytają o AI Overviews / ChatGPT Search).
+Per kategoria (użyj pasującej do rozpoznanej branży):
+- Social media: GEO/AI Search pod marką; wymiana danych (keywordy z Google <-> insighty social -> lepsze stawki SEM); domykanie lejka po reklamie na FB.
+- Webdev/software house: backlog zadań technicznych = płatne godziny dla nich (upselling); ochrona przed "ładną, ale martwą stroną"; bezpieczne migracje (301, ochrona ruchu).
+- Marketing automation: kaloryczny ruch -> szybszy wzrost bazy -> upselling wyższego planu; ratowanie retencji (narzędzie ma na czym pracować); my przed kliknięciem, oni po.
+- Agencje brandingowe: mierzalny ROI rebrandingu (ruch w GA4); ochrona przy zmianie domeny (audyt SEO); ochrona Brand SERP; projekt jednorazowy -> stały przychód.
+- Agencje SEM (tylko płatne, bez SEO in-house = KOMPLEMENTARNY partner, NIE konkurent): klauzula Non-Compete; niższy CPC przez Quality Score; wymiana danych o frazach.
+- Agencje kreatywne: przedłużenie życia kampanii "burst" (przechwytujemy intencję); upselling produkcji (wideo/infografiki pod SGE); praca w warstwie niewidocznej - nie tykamy kreacji.
+- Firmy doradcze/konsulting: wiarygodne ramię egzekucyjne (zaufany wykonawca strategii); dwukierunkowy cross-selling leadów; wspólne KPI i raportowanie do zarządu.
+
 W OCENIE ZAWRZYJ:
 - score (1-10) + czy kontaktować (TAK/NIE)
+- SYNERGIA: 1-2 konkretne argumenty, DLACZEGO ta firma zyska na partnerstwie (dopasowane do jej kategorii)
 - kategoria firmy (z listy powyżej)
 - rekomendowany model: referral / white-label / oba
 - czy mają SEO/SEM/GEO w ofercie (jeśli tak: konkurent czy sub-partner)

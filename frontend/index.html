@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="pl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Partner Finder — Last Agency</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="wrap">
+    <header class="topbar">
+      <div class="logo">Last<em>Agency</em></div>
+      <div class="mono"><span class="sq"></span> PARTNER FINDER</div>
+    </header>
+
+    <main class="hero">
+      <div class="mono center"><span class="sq"></span> NARZĘDZIE PARTNERSKIE</div>
+      <h1>Oceń potencjał <span class="accent">partnerski</span> firmy</h1>
+      <p class="sub">Wklej adres strony firmy. Agent AI przeanalizuje ją pod kątem współpracy
+        <strong>referral</strong> / <strong>white-label</strong> z Last Agency — score, model współpracy i uzasadnienie.</p>
+
+      <form id="form" class="search">
+        <input id="url" type="text" placeholder="https://firma.pl" autocomplete="off" spellcheck="false" required>
+        <button id="btn" type="submit">Oceń firmę <span class="arrow">→</span></button>
+      </form>
+
+      <section id="output" class="output" hidden></section>
+    </main>
+
+    <footer class="foot mono"><span class="sq"></span> © 2026 LAST AGENCY. COPYRIGHT.</footer>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

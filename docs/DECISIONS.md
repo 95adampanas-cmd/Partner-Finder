@@ -16,6 +16,15 @@
 **Decyzja:** Przepisać logikę z `openai.chat.completions` na framework Agents SDK.
 **Powód:** Nauka narzędzia branżowego; mniej boilerplate'u (pętla tool-calls, orkiestracja agentów).
 
+## 2026-07-09 — Search API: Google Custom Search na start
+**Decyzja:** Do wyszukiwania firm (Faza 2) używamy **Google Custom Search API**.
+Places API (dane kontaktowe firm z Map) dołożymy później, gdy przepływ zadziała.
+**Powód:** 100 zapytań/dzień za darmo (nauka bez kosztów), zwraca linki webowe, które
+wpinają się w istniejący `scrape_website` + scoring. Zero ryzyka budżetowego na start.
+**Jak obsługuje 2 tryby:** jedno narzędzie `search_companies(zapytanie)`; różni się tylko
+źródło zapytania — Tryb 2: user (miasto+branża), Tryb 1: agent buduje z profilu wyczytanego z URL-a.
+Rozwiązuje też open question „co znaczy podobna firma" (= ta sama branża, wyciągnięta przez agenta).
+
 ## 2026-07-04 — Zakres: 2 tryby zamiast 1, wspólny silnik oceny
 **Decyzja:** Produkt ma 2 tryby wejścia (Tryb 1: od URL → oceń + znajdź do 10 podobnych;
 Tryb 2: od kryteriów miasto+województwo+branża → znajdź do 10 firm), ale **jeden wspólny

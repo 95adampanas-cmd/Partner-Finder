@@ -1,30 +1,33 @@
 # BRAND — identyfikacja wizualna Last Agency
 
-> Ten plik zasila wygląd frontendu (Faza 3). Wypełnij, gdy będziesz gotów.
-> Claude Code użyje tych wartości w `frontend/style.css`.
+> Źródło: materiały ofertowe Last Agency (GEO+SEO, Konsultacja strategiczna) + lastagency.pl.
+> Zasila `frontend/style.css`.
 
-## Do uzupełnienia przez PM
+## Kolory
+- **Primary (pomarańcz/coral):** `#F04E2A` — główny akcent, przyciski, highlighty
+- **Tło ciemne:** `#0E0E10` — sekcje „dark", tło aplikacji
+- **Karta/panel (dark):** `#171719`, obramowanie `#262629`
+- **Tekst jasny:** `#F4F2EF` (biel złamana)
+- **Tekst wygaszony:** `#8A8A8F` (szary)
+- **Na pomarańczu:** biały `#FFFFFF`
 
-### Kolory
-- Główny (primary): `#______`
-- Akcent (accent): `#______`
-- Tło (background): `#______`
-- Tekst: `#______`
+## Typografia
+- **Logo:** serif pogrubiony (efekt „LastAgency" z kursywą w ogonku) → aproksymacja: Georgia/serif italic bold
+- **Nagłówki i tekst:** czysty sans-serif (grotesk) → system-ui / Helvetica / Arial
+- **Etykiety / captiony:** **monospace UPPERCASE** ze znacznikiem ■ (charakterystyczny element marki)
 
-### Typografia
-- Font nagłówków: `______`
-- Font tekstu: `______`
+## Motywy wizualne
+- Duże **zaokrąglone rogi** paneli (radius ~24–32px)
+- Naprzemienne sekcje **pomarańcz ↔ czerń**
+- Małe **mono-labelki** z pomarańczowym kwadratem ■ (np. „■ LAST AGENCY", „© 2026…")
+- **Pill-button:** pigułka + kółko ze strzałką →
+- Nagłówki: tekst z **jednym słowem w pomarańczu** (np. „…zanim poznają **konkurencję**")
 
-### Logo
-- Plik logo: `______` (wrzuć do `frontend/assets/`)
+## Ton komunikacji
+Konkretny, bezpośredni, ekspercki. „Bez lania wody, bez zbędnych disclaimerów."
+Fokus na wynik biznesowy (leady, sprzedaż), nie wskaźniki próżności.
 
-### Ton komunikacji
-- np. profesjonalny / bezpośredni / ekspercki: `______`
-
-### Inspiracje
-- Strona Last Agency: `______`
-- Inne strony, które Ci się podobają: `______`
-
----
-
-*Dopóki puste, frontend użyje neutralnej palety zastępczej.*
+## Assets
+- Strona: https://lastagency.pl/
+- Kontakt w materiałach: adam@business-core.pl
+- Logo: wordmark „LastAgency" (serif) — do wrzucenia jako plik w `frontend/assets/` (na razie tekstowo)

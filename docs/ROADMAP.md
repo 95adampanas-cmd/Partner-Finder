@@ -24,11 +24,14 @@
 - ⬜ Tryb 2 (od kryteriów): miasto + województwo + branża → znajdź do 10 firm → oceń każdą
 - ⬜ Doprecyzowanie definicji „podobna firma" (open question w PRD)
 
-## Faza 3 — Frontend ⬜
-- ⬜ FastAPI: endpointy dla obu trybów (firma → oceny; kryteria → oceny)
-- ⬜ `frontend/index.html` + `app.js` — wybór trybu, formularz, lista wyników
-- ⬜ Branding Last Agency (patrz BRAND.md)
-- ⬜ Spięcie front ↔ backend (CORS, fetch)
+## Faza 3 — Frontend 🟡 (przesunięta do przodu — demo Trybu 1 działa)
+- ✅ Backend `app.py` (Starlette): endpoint `POST /api/evaluate` + serwuje frontend
+- ✅ `frontend/` — index.html + style.css (branding Last Agency) + app.js (fetch, badge score)
+- ✅ Branding Last Agency wdrożony (pomarańcz #F04E2A, mono-labelki, pill-button)
+- ✅ Spięcie front ↔ backend — działa w przeglądarce (`localhost:8000`)
+- ✅ `start.bat` + `JAK-URUCHOMIC.md`
+- ⬜ Dodać Tryb 2 (kryteria: miasto+branża) do UI — po Fazie 2
+- ⬜ Ładniejszy render wyniku (strukturyzowany output zamiast tekstu)
 
 ## Faza 4 — Prowadzenie jako PM ⬜
 - ⬜ Regularne aktualizacje tego pliku i DECISIONS.md

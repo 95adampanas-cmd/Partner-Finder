@@ -1,0 +1,197 @@
+/* Partner Finder — branding Last Agency */
+:root {
+  --orange: #F04E2A;
+  --orange-dim: #c23c1f;
+  --bg: #0E0E10;
+  --card: #171719;
+  --card-2: #1e1e21;
+  --border: #2a2a2e;
+  --text: #F4F2EF;
+  --muted: #8A8A8F;
+  --radius: 26px;
+  --mono: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+.wrap {
+  max-width: 860px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 28px 22px 40px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Topbar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 40px;
+}
+.logo {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 700;
+  font-size: 26px;
+  letter-spacing: -0.5px;
+}
+.logo em { font-style: italic; }
+
+/* ── Mono labels (znacznik marki) ── */
+.mono {
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  color: var(--muted);
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+.mono.center { justify-content: center; }
+.sq { width: 9px; height: 9px; background: var(--orange); display: inline-block; }
+
+/* ── Hero ── */
+.hero {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 20px;
+}
+h1 {
+  font-size: clamp(34px, 6vw, 54px);
+  line-height: 1.05;
+  letter-spacing: -1.5px;
+  margin: 20px 0 14px;
+  font-weight: 700;
+}
+.accent { color: var(--orange); }
+.sub {
+  color: var(--muted);
+  max-width: 560px;
+  font-size: 17px;
+  margin: 0 0 34px;
+}
+.sub strong { color: var(--text); font-weight: 600; }
+
+/* ── Search form ── */
+.search {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  max-width: 620px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 8px 8px 8px 22px;
+}
+.search:focus-within { border-color: var(--orange); }
+#url {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--text);
+  font-size: 16px;
+  font-family: var(--sans);
+}
+#url::placeholder { color: #5f5f65; }
+#btn {
+  border: none;
+  background: var(--orange);
+  color: #fff;
+  font-weight: 600;
+  font-size: 15px;
+  padding: 13px 22px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background .15s;
+}
+#btn:hover { background: var(--orange-dim); }
+#btn:disabled { opacity: .55; cursor: default; }
+.arrow { font-size: 17px; }
+
+/* ── Output ── */
+.output { width: 100%; max-width: 680px; margin-top: 30px; text-align: left; }
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 26px 28px;
+}
+.result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+.result-body {
+  white-space: pre-wrap;
+  font-size: 15px;
+  color: #dcdad6;
+}
+.src {
+  display: inline-block;
+  margin-top: 18px;
+  color: var(--orange);
+  text-decoration: none;
+  font-size: 14px;
+  word-break: break-all;
+}
+.src:hover { text-decoration: underline; }
+
+/* Score badge */
+.score {
+  font-size: 30px;
+  font-weight: 700;
+  min-width: 78px;
+  text-align: center;
+  padding: 6px 14px;
+  border-radius: 14px;
+  line-height: 1;
+}
+.score span { font-size: 14px; color: var(--muted); font-weight: 500; }
+.score.good { background: rgba(240,78,42,.15); color: var(--orange); border: 1px solid rgba(240,78,42,.4); }
+.score.mid  { background: rgba(230,180,60,.12); color: #e6b43c; border: 1px solid rgba(230,180,60,.35); }
+.score.bad  { background: rgba(140,140,150,.1); color: var(--muted); border: 1px solid var(--border); }
+
+/* Loading */
+.loading { display: flex; align-items: center; gap: 16px; color: var(--muted); }
+.spinner {
+  width: 22px; height: 22px;
+  border: 3px solid var(--border);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Error */
+.error .mono { color: var(--orange); margin-bottom: 10px; }
+.error p { margin: 0; color: #dcdad6; font-size: 14px; }
+
+/* ── Footer ── */
+.foot { justify-content: center; padding-top: 44px; font-size: 11px; }
+
+@media (max-width: 560px) {
+  .search { flex-direction: column; border-radius: 20px; padding: 14px; }
+  #btn { justify-content: center; }
+}

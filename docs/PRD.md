@@ -112,3 +112,28 @@ marketingu, top 3 w niszy) = **score 9**, model **referral**.
 
 - Trafność oceny (czy PM zgadza się ze scoringiem) — cel: >80% ocen „sensownych".
 - Liczba znalezionych realnych leadów partnerskich na 1 zapytanie.
+
+## 7. Tryb czatu / asystent researchu (planowana funkcja)
+
+**Wizja:** scoring przestaje być końcem, a staje się **punktem wejścia do rozmowy.**
+Po ocenie firmy user może dopytywać agenta i prowadzić research na żywo:
+- „czemu dałeś 8, a nie 9?"
+- „daj 3 argumenty do rozmowy z ich szefem sprzedaży"
+- „jak zbić ich obiekcję, że sami robią SEO?" (agent sięga do `outreach-playbook.md`)
+- „napisz draft pierwszej wiadomości do nich"
+- „które nasze usługi im najbardziej podpasują?"
+
+Produkt ewoluuje z **narzędzia scoringowego** w **interaktywnego asystenta partnerskiego.**
+
+**Co trzeba dobudować:**
+- Backend: endpoint `POST /api/chat` — kontynuuje rozmowę z agentem, trzymając kontekst
+  (ocena firmy + historia wiadomości).
+- Pamięć rozmowy: sesja (Agents SDK `SQLiteSession`) albo historia wysyłana z frontu.
+  Na start RAM/historia z frontu; trwałe sesje = później (baza, bo dysk Render efemeryczny).
+- Frontend: okno czatu pod wynikiem oceny.
+- Podpięcie `outreach-playbook.md` jako narzędzie (agent w czacie podaje gotowe kontrargumenty).
+
+**Zależności / kolejność:**
+- ⚠️ Czat = więcej wywołań OpenAI → **najpierw HASŁO + limit wydatków** (publiczny URL bez ochrony = ryzyko budżetu).
+- Dopiero potem budujemy czat.
+- Otwarte: trwałość sesji na Render (efemeryczny dysk) — na MVP wystarczy pamięć w RAM.

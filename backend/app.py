@@ -97,8 +97,18 @@ ZŁY PARTNER (score 1-4):
 - Freelancer bez klientów, firma spoza Polski
 - Globalny gigant poza naszą skalą (np. worldline)
 
-ŚREDNI (5-6): ma klientów, ale trochę SEO w ofercie (ryzyko konfliktu) LUB za mało danych/budżetu.
-Uwaga: firma z SEO in-house NIE zawsze jest zła - może być sub-partnerem. Zaznacz to.
+ŚREDNI (5-6): za mało danych/budżetu LUB realnie prowadzi SEO jako jedną z głównych usług.
+
+WAŻNE — jak traktować sygnały SEO/SEM/GEO u firmy (NIE zaniżaj pochopnie):
+- Rozróżnij OFERTĘ RDZENIOWĄ od WZMIANKI POBOCZNEJ. Pojedyncze słowo w formularzu kontaktowym,
+  menu czy liście wyboru (np. opcja "Pozycjonowanie") to NIE dowód, że firma świadczy usługę SEO.
+  NIE zakładaj pełnego SEO in-house na podstawie jednej wzmianki.
+- Jeśli firma ma odrobinę SEO, ale jej RDZEŃ to co innego (e-commerce, webdev, branding...) →
+  traktuj jako SUB-PARTNERA / częściowego konkurenta w SEO, a NIE blokera. To NIE obniża score
+  mocnego partnera e-commerce — nadal może być 8-9.
+- Pełny KONKURENT (niski score) = firma, której GŁÓWNA, eksponowana oferta to SEO/SEM/GEO/pozycjonowanie.
+- Widzisz tylko stronę główną (pierwsze 5000 znaków) — jeśli nie masz pewności co do zakresu SEO,
+  załóż korzystnie dla partnera e-commerce i zaznacz niepewność, zamiast tankować score.
 
 KRYTERIA KWALIFIKACJI:
 - Brak konkurencyjnego SEO/SEM/GEO in-house (chyba że jako sub-partner)
@@ -138,8 +148,11 @@ EVALUATOR_PROMPT = """Oceniasz JAKOŚĆ analizy partnerskiej wykonanej przez inn
 
 CO SPRAWDZASZ:
 1. Czy score jest poparty KONKRETNYMI faktami ze strony (nazwa usług, platformy, klienci), a nie ogólnikami.
-2. Czy agent poprawnie rozpoznał, czy firma ma SEO/SEM/GEO w ofercie:
-   - jeśli ma i dostała wysoki score jako "partner" (nie sub-partner) -> BŁĄD, to konkurent.
+2. Czy agent poprawnie ocenił sygnały SEO/SEM/GEO:
+   - KONKURENT = firma, której GŁÓWNA, eksponowana oferta to SEO/SEM/GEO. Wysoki score dla takiego -> BŁĄD.
+   - ALE pojedyncza wzmianka (słowo w formularzu/menu, np. "Pozycjonowanie") NIE czyni firmy konkurentem.
+     Jeśli agent ZANIŻYŁ score mocnego partnera e-commerce z powodu pobocznej wzmianki SEO -> BŁĄD, każ PODNIEŚĆ.
+   - Firma z odrobiną SEO, ale rdzeniem gdzie indziej (e-commerce, webdev) = sub-partner, nie bloker.
 3. Czy agent NIE ZANIŻYŁ score przy widocznych MOCNYCH SYGNAŁACH. To częsty błąd - asekurowanie się szóstką.
    MOCNE SYGNAŁY, które powinny dać 8-10:
    - e-commerce na premium platformach (PrestaShop, Magento, Shopify Plus)

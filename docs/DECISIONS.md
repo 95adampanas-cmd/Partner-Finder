@@ -16,6 +16,15 @@
 **Decyzja:** Przepisać logikę z `openai.chat.completions` na framework Agents SDK.
 **Powód:** Nauka narzędzia branżowego; mniej boilerplate'u (pętla tool-calls, orkiestracja agentów).
 
+## 2026-07-10 — Sygnał SEO ≠ automatyczny konkurent (sub-partner, nie bloker)
+**Decyzja:** Firma z odrobiną SEO, ale rdzeniem gdzie indziej (e-commerce, webdev...) = **sub-partner /
+częściowy konkurent**, NIE bloker partnerstwa. Nie obniża score mocnego partnera e-commerce (może być 8-9).
+Rozróżniamy **ofertę rdzeniową** od **wzmianki pobocznej** (słowo w formularzu/menu ≠ realna usługa SEO).
+Pełny konkurent (niski score) = firma, której GŁÓWNA oferta to SEO/SEM/GEO.
+**Powód:** Agent zaniżał Tebim (mocny partner PrestaShop/e-commerce) do 6-8, bo z opcji „Pozycjonowanie"
+w formularzu wnioskował „konkurent SEO". Adam zweryfikował: Tebim NIE oferuje SEO. Skrap widzi tylko
+stronę główną (5000 znaków), więc łatwo o nadinterpretację. Zakodowane w SCORING_INSTRUCTIONS + EVALUATOR_PROMPT.
+
 ## 2026-07-09 — Search API: Google Custom Search na start
 **Decyzja:** Do wyszukiwania firm (Faza 2) używamy **Google Custom Search API**.
 Places API (dane kontaktowe firm z Map) dołożymy później, gdy przepływ zadziała.

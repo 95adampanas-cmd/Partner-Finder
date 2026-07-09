@@ -56,6 +56,26 @@ def save_partner(company: str, url: str, score: int, reason: str) -> str:
     return "zapisano"
 
 
+# budujemy 3 tool który odpali sobie model przy abalizie danego url w agent_score i agent_rerun ten tool ma pozwolic agentowi dostac się do dokuemntu values-categories,
+# żeby zweryfikować synergie na pdostawie księgi wiedzy
+
+@function_tool
+
+def get_synergie() -> str:
+
+    """Zwraca bazę wiedzy o synergiach i propozycji wartości dla partnerów (per kategoria).
+
+     Wywołaj to narzędzie PO rozpoznaniu kategorii firmy, aby napisać KONKRETNĄ sekcję
+    SYNERGIA dopasowaną do jej branży (nie ogólniki). Zwraca pełną treść dokumentu
+    value-proposition.md: argumenty uniwersalne + synergie per kategoria
+    (social media, webdev, marketing automation, branding, SEM, kreatywne, doradcze).
+    """
+    # wskazujemy sciezke do pliku z wiedzą value-proposition metodą path wskazujemy file i pobieramy go dzieki resolve
+    text = Path(__file__).resolve().parent.parent / "docs" / "value-proposition.md"
+    return text.read_text(encoding="utf-8")
+
+
+
 # ── Prompty ────────────────────────────────────────────────────────────────────
 SCORING_INSTRUCTIONS = """Jesteś analitykiem partnerskim Last Agency - agencji SEO/SEM/GEO/AI Search z Poznania.
 Wspierasz Growth & Partnerships Lead w budowie sieci partnerów: referral (polecają nam klientów) i white-label (zlecają nam usługi pod swoją marką).
@@ -65,8 +85,9 @@ ZADANIE: dostajesz URL firmy. Użyj scrape_website, oceń potencjał partnerski 
 FLOW:
 1. scrape_website na podanym URL
 2. Rozpoznaj kategorię firmy i oceń wg kryteriów
-3. Jeśli score >= 7 -> save_partner(company, url, score, reason)
-4. Zwróć pełną ocenę
+3. Wywołaj get_synergie() i dopasuj synergię do rozpoznanej kategorii firmy
+4. Jeśli score >= 7 -> save_partner(company, url, score, reason)
+5. Zwróć pełną ocenę
 
 DOBRE KATEGORIE PARTNERÓW (firmy z tych obszarów = kandydaci na referral/white-label):
 - Web dev / software house / twórcy sklepów (zwł. e-commerce)
@@ -116,21 +137,10 @@ KRYTERIA KWALIFIKACJI:
 - Potencjał wolumenu (liczba klientów, częstotliwość projektów)
 - Wiarygodność (opinie, lata działania, referencje)
 
-SYNERGIA / PROPOZYCJA WARTOŚCI (dopasuj do kategorii firmy — WSKAŻ, dlaczego TA firma zyska na partnerstwie):
-Argumenty uniwersalne (dla każdej firmy):
-- Budowanie MRR/LTV: referral/white-label = powtarzalny przychód, klient zostaje dłużej.
-- Prowizja, która ucieka: brak polecenia = utracony przychód (zgarnie go ktoś inny).
-- Cementowanie relacji: dokładając brakującą usługę pod ich marką, partner mocniej wiąże klienta.
-- Bezpieczny partner: nie zabieramy klienta, oddajemy z powrotem (inaczej niż agencja 360).
-- Nowy kanał GEO/AI Search pod ich marką (klienci pytają o AI Overviews / ChatGPT Search).
-Per kategoria (użyj pasującej do rozpoznanej branży):
-- Social media: GEO/AI Search pod marką; wymiana danych (keywordy z Google <-> insighty social -> lepsze stawki SEM); domykanie lejka po reklamie na FB.
-- Webdev/software house: backlog zadań technicznych = płatne godziny dla nich (upselling); ochrona przed "ładną, ale martwą stroną"; bezpieczne migracje (301, ochrona ruchu).
-- Marketing automation: kaloryczny ruch -> szybszy wzrost bazy -> upselling wyższego planu; ratowanie retencji (narzędzie ma na czym pracować); my przed kliknięciem, oni po.
-- Agencje brandingowe: mierzalny ROI rebrandingu (ruch w GA4); ochrona przy zmianie domeny (audyt SEO); ochrona Brand SERP; projekt jednorazowy -> stały przychód.
-- Agencje SEM (tylko płatne, bez SEO in-house = KOMPLEMENTARNY partner, NIE konkurent): klauzula Non-Compete; niższy CPC przez Quality Score; wymiana danych o frazach.
-- Agencje kreatywne: przedłużenie życia kampanii "burst" (przechwytujemy intencję); upselling produkcji (wideo/infografiki pod SGE); praca w warstwie niewidocznej - nie tykamy kreacji.
-- Firmy doradcze/konsulting: wiarygodne ramię egzekucyjne (zaufany wykonawca strategii); dwukierunkowy cross-selling leadów; wspólne KPI i raportowanie do zarządu.
+SYNERGIA / PROPOZYCJA WARTOŚCI:
+Aby napisać sekcję SYNERGIA, WYWOŁAJ narzędzie get_synergie() — zwraca pełną bazę wiedzy
+(argumenty uniwersalne + synergie per kategoria). Wybierz część pasującą do rozpoznanej
+kategorii firmy i podaj 1-2 KONKRETNE argumenty (konkrety z bazy, nie ogólniki).
 
 W OCENIE ZAWRZYJ:
 - score (1-10) + czy kontaktować (TAK/NIE)
@@ -195,7 +205,7 @@ MODEL = "gpt-5.4-mini"
 agent = Agent(
     name="Partner Finder",
     instructions=SCORING_INSTRUCTIONS,
-    tools=[scrape_website, save_partner],
+    tools=[scrape_website, save_partner, get_synergie],
     model=MODEL,
 )
 
@@ -210,7 +220,7 @@ agent_rerun = Agent(
     name="rerun",
     instructions=SCORING_INSTRUCTIONS
     + "\n\nDODATKOWO: dostajesz FEEDBACK od weryfikatora do swojej poprzedniej oceny. Uwzględnij go i oceń ponownie, bardziej precyzyjnie.",
-    tools=[scrape_website, save_partner],
+    tools=[scrape_website, save_partner, get_synergie],
     model=MODEL,
 )
 

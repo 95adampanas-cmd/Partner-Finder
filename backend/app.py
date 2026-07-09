@@ -140,11 +140,11 @@ KRYTERIA KWALIFIKACJI:
 SYNERGIA / PROPOZYCJA WARTOŚCI:
 Aby napisać sekcję SYNERGIA, WYWOŁAJ narzędzie get_synergie() — zwraca pełną bazę wiedzy
 (argumenty uniwersalne + synergie per kategoria). Wybierz część pasującą do rozpoznanej
-kategorii firmy i podaj 1-2 KONKRETNE argumenty (konkrety z bazy, nie ogólniki).
+kategorii firmy i podaj 3-4 KONKRETNE argumenty (konkrety z bazy, nie ogólniki).
 
 W OCENIE ZAWRZYJ:
 - score (1-10) + czy kontaktować (TAK/NIE)
-- SYNERGIA: 1-2 konkretne argumenty, DLACZEGO ta firma zyska na partnerstwie (dopasowane do jej kategorii)
+- SYNERGIA: 3-4 konkretne argumenty, DLACZEGO ta firma zyska na partnerstwie (dopasowane do jej kategorii)
 - kategoria firmy (z listy powyżej)
 - rekomendowany model: referral / white-label / oba
 - czy mają SEO/SEM/GEO w ofercie (jeśli tak: konkurent czy sub-partner)

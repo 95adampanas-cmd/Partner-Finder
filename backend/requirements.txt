@@ -1,8 +1,10 @@
-# OpenAI Agents SDK — framework agentowy
-openai-agents
+# OpenAI Agents SDK — wersje PRZYPIĘTE (zgodne ze sobą, jak lokalnie).
+# Bez pinów Render instalował najnowsze, niezgodne wersje -> błąd cache_write_tokens.
+openai-agents==0.17.7
+openai==2.44.0
 
-# API web
-fastapi
+# Serwer web — używamy Starlette bezpośrednio (nie FastAPI)
+starlette==1.3.1
 uvicorn[standard]
 
 # Narzędzia (tools)
@@ -11,4 +13,4 @@ beautifulsoup4
 
 # Konfiguracja i walidacja
 python-dotenv
-pydantic
+pydantic==2.13.4

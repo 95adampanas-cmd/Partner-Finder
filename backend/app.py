@@ -12,6 +12,7 @@ Potem otwórz http://localhost:8000
 
 from pathlib import Path
 import csv
+import uuid
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -76,6 +77,24 @@ def get_synergie() -> str:
 
 
 
+
+# 4 tool który korzsysta z bazy outrech, gdzie zapisane są obiekcje itp i jak rozmawiać
+
+@function_tool
+
+def get_playbook() -> str:
+
+    """Zwraca playbook zbijania obiekcji partnerów (per kategoria) z outreach-playbook.md.
+
+    Wywołuj przy KAŻDEJ ocenie firmy — zawiera gotowe kontrargumenty na typowe obiekcje
+    danej branży (np. webdev: "sami robimy SEO"; branding: "SEO zabije nasz tone of voice").
+    Użyj tego, żeby w ocenie dodać sekcję JAK ROZMAWIAĆ / zbijanie obiekcji dla tej firmy.
+    """
+    sciezka = Path(__file__).resolve().parent.parent / "docs" / "outreach-playbook.md"
+    return sciezka.read_text(encoding="utf-8")
+
+
+
 # ── Prompty ────────────────────────────────────────────────────────────────────
 SCORING_INSTRUCTIONS = """Jesteś analitykiem partnerskim Last Agency - agencji SEO/SEM/GEO/AI Search z Poznania.
 Wspierasz Growth & Partnerships Lead w budowie sieci partnerów: referral (polecają nam klientów) i white-label (zlecają nam usługi pod swoją marką).
@@ -86,8 +105,9 @@ FLOW:
 1. scrape_website na podanym URL
 2. Rozpoznaj kategorię firmy i oceń wg kryteriów
 3. Wywołaj get_synergie() i dopasuj synergię do rozpoznanej kategorii firmy
-4. Jeśli score >= 7 -> save_partner(company, url, score, reason)
-5. Zwróć pełną ocenę
+4. Wywołaj get_playbook() i dodaj sekcję JAK ROZMAWIAĆ (najczęstsze obiekcje tej branży + kontrargumenty)
+5. Jeśli score >= 7 -> save_partner(company, url, score, reason)
+6. Zwróć pełną ocenę
 
 DOBRE KATEGORIE PARTNERÓW (firmy z tych obszarów = kandydaci na referral/white-label):
 - Web dev / software house / twórcy sklepów (zwł. e-commerce)
@@ -145,6 +165,7 @@ kategorii firmy i podaj 3-4 KONKRETNE argumenty (konkrety z bazy, nie ogólniki)
 W OCENIE ZAWRZYJ:
 - score (1-10) + czy kontaktować (TAK/NIE)
 - SYNERGIA: 3-4 konkretne argumenty, DLACZEGO ta firma zyska na partnerstwie (dopasowane do jej kategorii)
+- JAK ROZMAWIAĆ: 2-3 najczęstsze obiekcje tej branży + krótki kontrargument na każdą (z get_playbook)
 - kategoria firmy (z listy powyżej)
 - rekomendowany model: referral / white-label / oba
 - czy mają SEO/SEM/GEO w ofercie (jeśli tak: konkurent czy sub-partner)
@@ -200,12 +221,12 @@ class Evaluator(BaseModel):
 
 
 # ── Agenci ─────────────────────────────────────────────────────────────────────
-MODEL = "gpt-5.4-mini"
+MODEL = "gpt-5.4-nano"
 
 agent = Agent(
     name="Partner Finder",
     instructions=SCORING_INSTRUCTIONS,
-    tools=[scrape_website, save_partner, get_synergie],
+    tools=[scrape_website, save_partner, get_synergie, get_playbook],
     model=MODEL,
 )
 
@@ -220,9 +241,34 @@ agent_rerun = Agent(
     name="rerun",
     instructions=SCORING_INSTRUCTIONS
     + "\n\nDODATKOWO: dostajesz FEEDBACK od weryfikatora do swojej poprzedniej oceny. Uwzględnij go i oceń ponownie, bardziej precyzyjnie.",
-    tools=[scrape_website, save_partner, get_synergie],
+    tools=[scrape_website, save_partner, get_synergie, get_playbook],
     model=MODEL,
 )
+
+
+# ── Czat / asystent researchu ───────────────────────────────────────────────
+# Agent czatowy: kontynuuje rozmowę o ocenionej firmie (research + outreach).
+CHAT_INSTRUCTIONS = SCORING_INSTRUCTIONS + """
+
+TRYB CZATU: Firma została już oceniona (ocena jest w historii rozmowy powyżej).
+Teraz odpowiadasz na pytania uzupełniające Growth & Partnerships Leada — pomagasz w
+researchu i przygotowaniu do rozmowy z partnerem. Korzystaj z kontekstu oceny oraz z
+narzędzi: get_synergie (baza synergii per kategoria) i get_playbook (zbijanie obiekcji).
+Bądź konkretny, bez lania wody. NIE oceniaj firmy od nowa i NIE zapisuj niczego — po prostu
+pomagaj (argumenty, synergie, drafty wiadomości, angle kontaktu, kontrargumenty, porównania).
+Odpowiadaj po polsku.
+"""
+
+agent_chat = Agent(
+    name="chat",
+    instructions=CHAT_INSTRUCTIONS,
+    tools=[get_synergie, get_playbook],
+    model=MODEL,
+)
+
+# Pamięć rozmów: conversation_id -> historia wiadomości.
+# UWAGA: w RAM (efemeryczne) — znika przy restarcie serwera. Na MVP wystarcza.
+sesje: dict[str, list] = {}
 
 
 # ── Orkiestracja (jak w notebooku) ─────────────────────────────────────────────
@@ -260,7 +306,32 @@ async def api_evaluate(request):
         if not url:
             return JSONResponse({"ok": False, "error": "Brak URL"})
         wynik = await evaluate_company(url)
-        return JSONResponse({"ok": True, "result": wynik})
+        # Zakładamy sesję czatu: zaczynamy historię od zapytania i gotowej oceny.
+        cid = str(uuid.uuid4())
+        sesje[cid] = [
+            {"role": "user", "content": f"Oceń firmę: {url}"},
+            {"role": "assistant", "content": wynik},
+        ]
+        return JSONResponse({"ok": True, "result": wynik, "conversation_id": cid})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)})
+
+
+async def api_chat(request):
+    try:
+        body = await request.json()
+        cid = body.get("conversation_id")
+        message = (body.get("message") or "").strip()
+        if not message:
+            return JSONResponse({"ok": False, "error": "Pusta wiadomość"})
+        historia = sesje.get(cid)
+        if historia is None:
+            return JSONResponse({"ok": False, "error": "Sesja wygasła — oceń firmę ponownie."})
+        # dopisujemy pytanie usera i odpalamy agenta czatowego z całą historią
+        historia.append({"role": "user", "content": message})
+        result = await Runner.run(agent_chat, historia)
+        sesje[cid] = result.to_input_list()  # zapisujemy zaktualizowaną historię
+        return JSONResponse({"ok": True, "reply": result.final_output})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)})
 
@@ -270,5 +341,6 @@ frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
 
 app = Starlette(routes=[
     Route("/api/evaluate", api_evaluate, methods=["POST"]),
+    Route("/api/chat", api_chat, methods=["POST"]),
     Mount("/", app=StaticFiles(directory=str(frontend_dir), html=True), name="frontend"),
 ])

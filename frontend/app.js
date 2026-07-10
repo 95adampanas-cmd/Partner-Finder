@@ -4,7 +4,7 @@ const urlInput = document.getElementById("url");
 const btn = document.getElementById("btn");
 const output = document.getElementById("output");
 
-let conversationId = null; // id sesji czatu (z /api/evaluate)
+let mainCid = null; // conversation_id głównej firmy (do szukania podobnych)
 
 // podpowiedzi w czacie — pokazują userowi, o co MOŻE pytać
 const SUGESTIE = [
@@ -14,31 +14,25 @@ const SUGESTIE = [
   "Który model współpracy najlepszy i dlaczego?",
 ];
 
+// ── Ocena głównej firmy ──
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   let url = urlInput.value.trim();
   if (!url) return;
-  if (!/^https?:\/\//i.test(url)) url = "https://" + url; // dopisz https:// jeśli brak
+  if (!/^https?:\/\//i.test(url)) url = "https://" + url;
 
   output.hidden = false;
   output.innerHTML = loadingHTML();
   btn.disabled = true;
-  conversationId = null;
+  mainCid = null;
 
   try {
-    const res = await fetch("/api/evaluate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-    const data = await res.json();
+    const data = await evaluate(url);
     if (data.ok === false) {
       output.innerHTML = errorHTML(data.error);
     } else {
-      conversationId = data.conversation_id;
-      output.innerHTML = resultHTML(data.result, url) + similarHTML() + chatHTML();
-      mountChat();
-      mountSimilar();
+      mainCid = data.conversation_id;
+      output.innerHTML = companyBlockHTML(data.result, url, data.conversation_id) + similarHTML();
     }
   } catch (err) {
     output.innerHTML = errorHTML(err.message);
@@ -47,7 +41,40 @@ form.addEventListener("submit", async (e) => {
   }
 });
 
-// ── Ocena ──
+async function evaluate(url) {
+  const res = await fetch("/api/evaluate", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ url }),
+  });
+  return res.json();
+}
+
+// ── Event delegation (jeden listener na wszystkie firmy/czaty) ──
+output.addEventListener("submit", (e) => {
+  if (e.target.classList.contains("chat-form")) {
+    e.preventDefault();
+    const block = e.target.closest(".chat-block");
+    const input = e.target.querySelector(".chat-text");
+    const msg = input.value.trim();
+    if (msg) {
+      input.value = "";
+      sendChat(block, msg);
+    }
+  }
+});
+
+output.addEventListener("click", (e) => {
+  if (e.target.classList.contains("chip")) {
+    sendChat(e.target.closest(".chat-block"), e.target.textContent);
+  } else if (e.target.id === "find-similar") {
+    findSimilar();
+  } else if (e.target.classList.contains("ocen-btn")) {
+    ocenRow(e.target);
+  }
+});
+
+// ── Bloki widoku ──
 function loadingHTML() {
   return `<div class="card loading">
     <div class="spinner"></div>
@@ -62,11 +89,14 @@ function errorHTML(msg) {
   </div>`;
 }
 
+// pełny blok firmy = ocena + własny czat (przypięty do jej conversation_id)
+function companyBlockHTML(text, url, cid) {
+  return resultHTML(text, url) + chatBlockHTML(cid);
+}
+
 function resultHTML(text, url) {
   const score = extractScore(text);
-  const badge = score !== null
-    ? `<div class="score ${scoreClass(score)}">${score}<span>/10</span></div>`
-    : "";
+  const badge = score !== null ? `<div class="score ${scoreClass(score)}">${score}<span>/10</span></div>` : "";
   return `<div class="card result">
     <div class="result-head">
       <div class="mono"><span class="sq"></span> OCENA PARTNERSKA</div>
@@ -77,39 +107,24 @@ function resultHTML(text, url) {
   </div>`;
 }
 
-// ── Czat ──
-function chatHTML() {
+// czat przypięty do KONKRETNEJ firmy (data-cid)
+function chatBlockHTML(cid) {
   const chips = SUGESTIE.map((s) => `<button class="chip" type="button">${escapeHtml(s)}</button>`).join("");
-  return `<div class="card chat">
-    <div class="mono"><span class="sq"></span> DOPYTAJ — RESEARCH NA ŻYWO</div>
-    <p class="chat-hint">To nie koniec — możesz dopytać o tę firmę, branżę, synergię albo sposób rozmowy:</p>
+  return `<div class="card chat chat-block" data-cid="${escapeAttr(cid)}">
+    <div class="mono"><span class="sq"></span> DOPYTAJ O TĘ FIRMĘ</div>
+    <p class="chat-hint">Możesz dopytać o tę firmę, branżę, synergię albo sposób rozmowy:</p>
     <div class="chips">${chips}</div>
-    <div id="chat-messages" class="chat-messages"></div>
-    <form id="chat-form" class="chat-input">
-      <input id="chat-text" type="text" placeholder="Zapytaj o cokolwiek…" autocomplete="off">
+    <div class="chat-messages"></div>
+    <form class="chat-form chat-input">
+      <input class="chat-text" type="text" placeholder="Zapytaj o cokolwiek…" autocomplete="off">
       <button type="submit">Wyślij</button>
     </form>
   </div>`;
 }
 
-function mountChat() {
-  const chatForm = document.getElementById("chat-form");
-  const chatText = document.getElementById("chat-text");
-  chatForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-    const msg = chatText.value.trim();
-    if (msg) {
-      chatText.value = "";
-      sendChat(msg);
-    }
-  });
-  document.querySelectorAll(".chip").forEach((chip) => {
-    chip.addEventListener("click", () => sendChat(chip.textContent));
-  });
-}
-
-async function sendChat(message) {
-  const box = document.getElementById("chat-messages");
+async function sendChat(block, message) {
+  const cid = block.dataset.cid;
+  const box = block.querySelector(".chat-messages");
   box.insertAdjacentHTML("beforeend", msgHTML("user", message));
   const thinkingId = "think-" + Date.now();
   box.insertAdjacentHTML("beforeend", `<div id="${thinkingId}" class="msg bot thinking">pisze…</div>`);
@@ -119,7 +134,7 @@ async function sendChat(message) {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversation_id: conversationId, message }),
+      body: JSON.stringify({ conversation_id: cid, message }),
     });
     const data = await res.json();
     document.getElementById(thinkingId)?.remove();
@@ -139,28 +154,24 @@ function msgHTML(who, text) {
 function similarHTML() {
   return `<div class="card similar">
     <div class="mono"><span class="sq"></span> PODOBNE FIRMY</div>
-    <p class="chat-hint">Znajdź firmy z tej samej branży. Scoring odpalasz osobno dla każdej —
+    <p class="chat-hint">Znajdź firmy z tej samej branży. Scoring (i czat) odpalasz osobno dla każdej —
       płacisz tylko za te, które Cię interesują.</p>
     <button id="find-similar" class="find-btn" type="button">🔍 Znajdź 10 podobnych firm</button>
     <div id="similar-list" class="similar-list"></div>
   </div>`;
 }
 
-function mountSimilar() {
-  document.getElementById("find-similar").addEventListener("click", findSimilar);
-}
-
 async function findSimilar() {
-  const btn = document.getElementById("find-similar");
+  const btnEl = document.getElementById("find-similar");
   const list = document.getElementById("similar-list");
-  btn.disabled = true;
-  btn.textContent = "Szukam podobnych… (~5 s)";
+  btnEl.disabled = true;
+  btnEl.textContent = "Szukam podobnych… (~5 s)";
   list.innerHTML = "";
   try {
     const res = await fetch("/api/similar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversation_id: conversationId }),
+      body: JSON.stringify({ conversation_id: mainCid }),
     });
     const data = await res.json();
     if (data.ok === false) {
@@ -169,15 +180,12 @@ async function findSimilar() {
       list.innerHTML = `<p class="sim-err">Nie znalazłem podobnych firm.</p>`;
     } else {
       list.innerHTML = data.companies.map(rowHTML).join("");
-      document.querySelectorAll(".sim-row .ocen-btn").forEach((b) =>
-        b.addEventListener("click", () => ocenRow(b))
-      );
     }
   } catch (err) {
     list.innerHTML = `<p class="sim-err">⚠️ ${escapeHtml(err.message)}</p>`;
   } finally {
-    btn.disabled = false;
-    btn.textContent = "🔍 Znajdź 10 podobnych firm";
+    btnEl.disabled = false;
+    btnEl.textContent = "🔍 Znajdź 10 podobnych firm";
   }
 }
 
@@ -194,32 +202,28 @@ function rowHTML(firma) {
   </div>`;
 }
 
-async function ocenRow(btn) {
-  const row = btn.closest(".sim-row");
+async function ocenRow(btnEl) {
+  const row = btnEl.closest(".sim-row");
   const url = row.dataset.url;
   const box = row.querySelector(".sim-result");
-  btn.disabled = true;
-  btn.textContent = "Oceniam…";
+  btnEl.disabled = true;
+  btnEl.textContent = "Oceniam…";
   box.innerHTML = `<div class="spinner"></div>`;
   try {
-    const res = await fetch("/api/evaluate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url }),
-    });
-    const data = await res.json();
+    const data = await evaluate(url);
     if (data.ok === false) {
       box.innerHTML = `<p class="sim-err">⚠️ ${escapeHtml(data.error)}</p>`;
+      btnEl.textContent = "Oceń ponownie";
     } else {
-      const score = extractScore(data.result);
-      const badge = score !== null ? `<span class="score-mini ${scoreClass(score)}">${score}/10</span>` : "";
-      box.innerHTML = `${badge}<div class="result-body">${formatText(data.result)}</div>`;
+      // ocena + WŁASNY czat tej firmy (jej conversation_id)
+      box.innerHTML = companyBlockHTML(data.result, url, data.conversation_id);
+      btnEl.textContent = "✓ Ocenione";
     }
   } catch (err) {
     box.innerHTML = `<p class="sim-err">⚠️ ${escapeHtml(err.message)}</p>`;
+    btnEl.textContent = "Oceń ponownie";
   } finally {
-    btn.disabled = false;
-    btn.textContent = "Oceń ponownie";
+    btnEl.disabled = false;
   }
 }
 

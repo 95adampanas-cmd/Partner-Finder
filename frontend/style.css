@@ -301,6 +301,9 @@ h1 {
 
 .sim-result { margin-top: 12px; }
 .sim-result:empty { margin: 0; }
+/* oceniona podobna firma: jej ocena + własny czat, zagnieżdżone w wierszu */
+.sim-result .card { margin-top: 12px; }
+.sim-result .card:first-child { margin-top: 0; }
 .score-mini {
   display: inline-block;
   font-weight: 700;

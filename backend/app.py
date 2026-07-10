@@ -103,9 +103,9 @@ def szukaj_firm(zapytanie: str) -> str:
     Zwraca listę znalezionych stron (tytuł + URL). Używaj do znajdowania firm PODOBNYCH
     do ocenianej (ta sama branża, Polska).
     """
-    key = os.environ.get("TAVILY_API_KEY")
+    key = os.environ.get("TAVILY_API_KEY") or os.environ.get("TVLY_API_KEY")
     if not key:
-        return "BŁĄD: brak TAVILY_API_KEY w środowisku."
+        return "BŁĄD: brak klucza Tavily (TAVILY_API_KEY lub TVLY_API_KEY) w środowisku."
     client = TavilyClient(api_key=key)
     res = client.search(zapytanie, max_results=10)
     return "\n".join(f"{r['title']} — {r['url']}" for r in res.get("results", []))

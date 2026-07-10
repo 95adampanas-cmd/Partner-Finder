@@ -11,6 +11,7 @@ Potem otwórz http://localhost:8000
 """
 
 from pathlib import Path
+from urllib.parse import urlparse
 import csv
 import uuid
 import os
@@ -96,19 +97,39 @@ def get_playbook() -> str:
     return sciezka.read_text(encoding="utf-8")
 
 
-@function_tool
-def szukaj_firm(zapytanie: str) -> str:
-    """Szuka firm w internecie (Tavily). Podaj zapytanie, np. 'agencje PrestaShop e-commerce Polska'.
-
-    Zwraca listę znalezionych stron (tytuł + URL). Używaj do znajdowania firm PODOBNYCH
-    do ocenianej (ta sama branża, Polska).
-    """
+# Zwykła funkcja (NIE @function_tool) — wołamy Tavily bezpośrednio z endpointu /api/similar.
+def tavily_search(zapytanie: str, max_results: int = 15) -> list:
     key = os.environ.get("TAVILY_API_KEY") or os.environ.get("TVLY_API_KEY")
     if not key:
-        return "BŁĄD: brak klucza Tavily (TAVILY_API_KEY lub TVLY_API_KEY) w środowisku."
+        return []
     client = TavilyClient(api_key=key)
-    res = client.search(zapytanie, max_results=10)
-    return "\n".join(f"{r['title']} — {r['url']}" for r in res.get("results", []))
+    return client.search(zapytanie, max_results=max_results).get("results", [])
+
+
+# Domeny/frazy katalogów, rankingów i agregatorów — odrzucamy je deterministycznie.
+KATALOGI = (
+    "clutch.co", "sortlist", "themanifest", "goodfirms", "designrush", "techbehemoths",
+    "topcssgallery", "wikipedia", "facebook", "linkedin", "wordpress.org", "domenomania",
+    "oferteo", "ceneo", "opineo", "youtube", "instagram",
+    "/ranking", "najlepsze-", "top-10", "top10", "firm-i-agencji", "-agencji-ktore", "/blog/",
+)
+
+
+def filtruj_firmy(wyniki: list, wlasna_domena: str) -> list:
+    """Zostawia realne firmy: usuwa katalogi/rankingi, ocenianą firmę i duplikaty domen."""
+    firmy, widziane = [], set()
+    for r in wyniki:
+        url = r.get("url", "")
+        dom = urlparse(url).netloc.replace("www.", "").lower()
+        if not dom or dom in widziane:
+            continue
+        if wlasna_domena and wlasna_domena in dom:
+            continue
+        if any(k in url.lower() for k in KATALOGI):
+            continue
+        widziane.add(dom)
+        firmy.append({"nazwa": (r.get("title") or dom)[:60], "url": url})
+    return firmy[:10]
 
 
 
@@ -285,23 +306,14 @@ agent_chat = Agent(
 
 
 # ── Wyszukiwanie podobnych firm (Tavily) ──
-class Firma(BaseModel):
-    nazwa: str
-    url: str
-
-
-class PodobneFirmy(BaseModel):
-    firmy: list[Firma]
-
-
-agent_search = Agent(
-    name="search",
-    instructions="""Na podstawie oceny firmy z historii powyżej: wygeneruj JEDNO trafne zapytanie
-do wyszukiwarki, żeby znaleźć firmy PODOBNE (ta sama branża/kategoria, Polska), i wywołaj szukaj_firm.
-Zwróć do 10 firm (nazwa + url). ODFILTRUJ: samą ocenianą firmę, katalogi/portale/agregatory
-(Clutch, Sortlist, mapy, rankingi, wikipedia) oraz duplikaty domen. Zostaw realne firmy — kandydatów na partnera.""",
-    tools=[szukaj_firm],
-    output_type=PodobneFirmy,
+# Agent robi TYLKO jedną prostą rzecz: generuje zapytanie do wyszukiwarki (nano wystarczy).
+# Wywołanie Tavily i filtrowanie robi deterministyczny kod w /api/similar (pewne, powtarzalne).
+agent_query = Agent(
+    name="query",
+    instructions="""Na podstawie oceny firmy z historii: napisz JEDNO krótkie zapytanie do wyszukiwarki
+(po polsku), które znajdzie REALNE firmy z tej samej branży/kategorii w Polsce (podobne agencje/firmy).
+Używaj fraz USŁUGOWYCH (np. "tworzenie stron WordPress", "agencja e-commerce PrestaShop", "software house Poznań"),
+a NIE fraz typu "ranking / top 10 / najlepsze firmy". Zwróć TYLKO samo zapytanie, bez cudzysłowów i komentarza.""",
     model=MODEL,
 )
 
@@ -383,13 +395,24 @@ async def api_similar(request):
         historia = sesje.get(cid)
         if historia is None:
             return JSONResponse({"ok": False, "error": "Sesja wygasła — oceń firmę ponownie."})
-        # agent generuje zapytanie z kontekstu oceny, woła Tavily i zwraca listę firm
-        result = await Runner.run(
-            agent_search,
-            historia + [{"role": "user", "content": "Znajdź do 10 podobnych firm."}],
-        )
-        podobne = result.final_output  # PodobneFirmy
-        return JSONResponse({"ok": True, "companies": [f.model_dump() for f in podobne.firmy]})
+
+        # 1) LLM generuje TYLKO zapytanie (proste, pewne)
+        r = await Runner.run(agent_query, historia + [{"role": "user", "content": "Podaj zapytanie do wyszukiwarki."}])
+        zapytanie = (r.final_output or "").strip().strip('"')
+
+        # 2) własna domena ocenianej firmy (żeby ją odfiltrować)
+        wlasny_url = ""
+        for m in historia:
+            c = m.get("content", "") if isinstance(m, dict) else ""
+            if isinstance(c, str) and "Oceń firmę:" in c:
+                wlasny_url = c.split("Oceń firmę:")[-1].strip()
+                break
+        wlasna_domena = urlparse(wlasny_url).netloc.replace("www.", "").lower() if wlasny_url else ""
+
+        # 3) Tavily + deterministyczny filtr
+        wyniki = tavily_search(zapytanie, max_results=15)
+        firmy = filtruj_firmy(wyniki, wlasna_domena)
+        return JSONResponse({"ok": True, "companies": firmy, "zapytanie": zapytanie})
     except Exception as e:
         return JSONResponse({"ok": False, "error": str(e)})
 

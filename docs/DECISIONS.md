@@ -16,6 +16,17 @@
 **Decyzja:** Przepisać logikę z `openai.chat.completions` na framework Agents SDK.
 **Powód:** Nauka narzędzia branżowego; mniej boilerplate'u (pętla tool-calls, orkiestracja agentów).
 
+## 2026-07-10 — Search API: Tavily zamiast Custom Search + scoring na żądanie
+**Decyzja:** Do wyszukiwania podobnych firm używamy **Tavily** (`tavily-python`), nie Google Custom Search.
+UX: przycisk „🔍 Znajdź 10 podobnych" znajduje firmy (nazwa+URL) BEZ scoringu; każda domena ma guzik
+**[Oceń]**, który uruchamia pełny scoring TYLKO dla niej (reużywa `/api/evaluate`). Szukanie manualne
+(nie auto po URL) — kontrola kosztów.
+**Powód:** Tavily jest zbudowane dla agentów AI (czyste wyniki, prosty SDK, jeden klucz `TAVILY_API_KEY`,
+free ~1000/mies). Wzorzec „szukaj tanio, oceniaj na żądanie" (pomysł Adama) rozwiązuje koszt/czas —
+nie oceniamy 10 firm na ślepo, tylko wybrane na klik.
+**Jak:** narzędzie `szukaj_firm` (Tavily) → `agent_search` (output_type=PodobneFirmy) generuje zapytanie
+z kontekstu oceny (sesja) i zwraca listę → endpoint `/api/similar` → frontend renderuje listę z guzikami [Oceń].
+
 ## 2026-07-10 — Sygnał SEO ≠ automatyczny konkurent (sub-partner, nie bloker)
 **Decyzja:** Firma z odrobiną SEO, ale rdzeniem gdzie indziej (e-commerce, webdev...) = **sub-partner /
 częściowy konkurent**, NIE bloker partnerstwa. Nie obniża score mocnego partnera e-commerce (może być 8-9).

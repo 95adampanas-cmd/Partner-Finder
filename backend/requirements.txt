@@ -10,6 +10,7 @@ uvicorn[standard]
 # Narzędzia (tools)
 requests
 beautifulsoup4
+tavily-python==0.7.25
 
 # Konfiguracja i walidacja
 python-dotenv

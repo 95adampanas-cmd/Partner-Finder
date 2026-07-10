@@ -255,6 +255,65 @@ h1 {
 }
 .chat-input button:hover { background: var(--orange-dim); }
 
+/* ── Podobne firmy ── */
+.similar { margin-top: 16px; }
+.similar .mono { color: var(--orange); margin-bottom: 6px; }
+.find-btn {
+  border: 1px solid var(--orange);
+  background: rgba(240,78,42,.12);
+  color: var(--orange);
+  font-weight: 600;
+  font-size: 15px;
+  padding: 12px 20px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .15s;
+}
+.find-btn:hover { background: rgba(240,78,42,.22); }
+.find-btn:disabled { opacity: .6; cursor: default; }
+
+.similar-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.sim-row {
+  background: var(--card-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.sim-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.sim-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sim-name { font-weight: 600; font-size: 15px; }
+.sim-url { color: var(--muted); font-size: 13px; text-decoration: none; word-break: break-all; }
+.sim-url:hover { color: var(--orange); }
+.ocen-btn {
+  border: none;
+  background: var(--orange);
+  color: #fff;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 9px 16px;
+  border-radius: 999px;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.ocen-btn:hover { background: var(--orange-dim); }
+.ocen-btn:disabled { opacity: .6; cursor: default; }
+
+.sim-result { margin-top: 12px; }
+.sim-result:empty { margin: 0; }
+.score-mini {
+  display: inline-block;
+  font-weight: 700;
+  font-size: 15px;
+  padding: 3px 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+}
+.score-mini.good { background: rgba(240,78,42,.15); color: var(--orange); border: 1px solid rgba(240,78,42,.4); }
+.score-mini.mid  { background: rgba(230,180,60,.12); color: #e6b43c; border: 1px solid rgba(230,180,60,.35); }
+.score-mini.bad  { background: rgba(140,140,150,.1); color: var(--muted); border: 1px solid var(--border); }
+.sim-err { color: var(--muted); font-size: 14px; margin: 6px 0 0; }
+
 /* ── Footer ── */
 .foot { justify-content: center; padding-top: 44px; font-size: 11px; }
 

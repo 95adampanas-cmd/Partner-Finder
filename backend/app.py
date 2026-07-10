@@ -13,6 +13,7 @@ Potem otwórz http://localhost:8000
 from pathlib import Path
 import csv
 import uuid
+import os
 
 from dotenv import load_dotenv
 from pydantic import BaseModel
@@ -22,6 +23,7 @@ from starlette.responses import JSONResponse
 from starlette.staticfiles import StaticFiles
 import requests
 from bs4 import BeautifulSoup
+from tavily import TavilyClient
 from agents import Agent, Runner, function_tool
 
 # .env leży obok tego pliku (klucz OPENAI_API_KEY)
@@ -92,6 +94,21 @@ def get_playbook() -> str:
     """
     sciezka = Path(__file__).resolve().parent.parent / "docs" / "outreach-playbook.md"
     return sciezka.read_text(encoding="utf-8")
+
+
+@function_tool
+def szukaj_firm(zapytanie: str) -> str:
+    """Szuka firm w internecie (Tavily). Podaj zapytanie, np. 'agencje PrestaShop e-commerce Polska'.
+
+    Zwraca listę znalezionych stron (tytuł + URL). Używaj do znajdowania firm PODOBNYCH
+    do ocenianej (ta sama branża, Polska).
+    """
+    key = os.environ.get("TAVILY_API_KEY")
+    if not key:
+        return "BŁĄD: brak TAVILY_API_KEY w środowisku."
+    client = TavilyClient(api_key=key)
+    res = client.search(zapytanie, max_results=10)
+    return "\n".join(f"{r['title']} — {r['url']}" for r in res.get("results", []))
 
 
 
@@ -266,6 +283,29 @@ agent_chat = Agent(
     model=MODEL,
 )
 
+
+# ── Wyszukiwanie podobnych firm (Tavily) ──
+class Firma(BaseModel):
+    nazwa: str
+    url: str
+
+
+class PodobneFirmy(BaseModel):
+    firmy: list[Firma]
+
+
+agent_search = Agent(
+    name="search",
+    instructions="""Na podstawie oceny firmy z historii powyżej: wygeneruj JEDNO trafne zapytanie
+do wyszukiwarki, żeby znaleźć firmy PODOBNE (ta sama branża/kategoria, Polska), i wywołaj szukaj_firm.
+Zwróć do 10 firm (nazwa + url). ODFILTRUJ: samą ocenianą firmę, katalogi/portale/agregatory
+(Clutch, Sortlist, mapy, rankingi, wikipedia) oraz duplikaty domen. Zostaw realne firmy — kandydatów na partnera.""",
+    tools=[szukaj_firm],
+    output_type=PodobneFirmy,
+    model=MODEL,
+)
+
+
 # Pamięć rozmów: conversation_id -> historia wiadomości.
 # UWAGA: w RAM (efemeryczne) — znika przy restarcie serwera. Na MVP wystarcza.
 sesje: dict[str, list] = {}
@@ -336,11 +376,30 @@ async def api_chat(request):
         return JSONResponse({"ok": False, "error": str(e)})
 
 
+async def api_similar(request):
+    try:
+        body = await request.json()
+        cid = body.get("conversation_id")
+        historia = sesje.get(cid)
+        if historia is None:
+            return JSONResponse({"ok": False, "error": "Sesja wygasła — oceń firmę ponownie."})
+        # agent generuje zapytanie z kontekstu oceny, woła Tavily i zwraca listę firm
+        result = await Runner.run(
+            agent_search,
+            historia + [{"role": "user", "content": "Znajdź do 10 podobnych firm."}],
+        )
+        podobne = result.final_output  # PodobneFirmy
+        return JSONResponse({"ok": True, "companies": [f.model_dump() for f in podobne.firmy]})
+    except Exception as e:
+        return JSONResponse({"ok": False, "error": str(e)})
+
+
 # Frontend serwowany pod / (Mount MUSI być po trasach /api)
 frontend_dir = Path(__file__).resolve().parent.parent / "frontend"
 
 app = Starlette(routes=[
     Route("/api/evaluate", api_evaluate, methods=["POST"]),
     Route("/api/chat", api_chat, methods=["POST"]),
+    Route("/api/similar", api_similar, methods=["POST"]),
     Mount("/", app=StaticFiles(directory=str(frontend_dir), html=True), name="frontend"),
 ])

@@ -36,8 +36,9 @@ form.addEventListener("submit", async (e) => {
       output.innerHTML = errorHTML(data.error);
     } else {
       conversationId = data.conversation_id;
-      output.innerHTML = resultHTML(data.result, url) + chatHTML();
+      output.innerHTML = resultHTML(data.result, url) + similarHTML() + chatHTML();
       mountChat();
+      mountSimilar();
     }
   } catch (err) {
     output.innerHTML = errorHTML(err.message);
@@ -132,6 +133,94 @@ async function sendChat(message) {
 
 function msgHTML(who, text) {
   return `<div class="msg ${who}">${formatText(text)}</div>`;
+}
+
+// ── Podobne firmy (Tavily) ──
+function similarHTML() {
+  return `<div class="card similar">
+    <div class="mono"><span class="sq"></span> PODOBNE FIRMY</div>
+    <p class="chat-hint">Znajdź firmy z tej samej branży. Scoring odpalasz osobno dla każdej —
+      płacisz tylko za te, które Cię interesują.</p>
+    <button id="find-similar" class="find-btn" type="button">🔍 Znajdź 10 podobnych firm</button>
+    <div id="similar-list" class="similar-list"></div>
+  </div>`;
+}
+
+function mountSimilar() {
+  document.getElementById("find-similar").addEventListener("click", findSimilar);
+}
+
+async function findSimilar() {
+  const btn = document.getElementById("find-similar");
+  const list = document.getElementById("similar-list");
+  btn.disabled = true;
+  btn.textContent = "Szukam podobnych… (~5 s)";
+  list.innerHTML = "";
+  try {
+    const res = await fetch("/api/similar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ conversation_id: conversationId }),
+    });
+    const data = await res.json();
+    if (data.ok === false) {
+      list.innerHTML = `<p class="sim-err">⚠️ ${escapeHtml(data.error)}</p>`;
+    } else if (!data.companies || data.companies.length === 0) {
+      list.innerHTML = `<p class="sim-err">Nie znalazłem podobnych firm.</p>`;
+    } else {
+      list.innerHTML = data.companies.map(rowHTML).join("");
+      document.querySelectorAll(".sim-row .ocen-btn").forEach((b) =>
+        b.addEventListener("click", () => ocenRow(b))
+      );
+    }
+  } catch (err) {
+    list.innerHTML = `<p class="sim-err">⚠️ ${escapeHtml(err.message)}</p>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "🔍 Znajdź 10 podobnych firm";
+  }
+}
+
+function rowHTML(firma) {
+  return `<div class="sim-row" data-url="${escapeAttr(firma.url)}">
+    <div class="sim-head">
+      <div class="sim-info">
+        <span class="sim-name">${escapeHtml(firma.nazwa)}</span>
+        <a class="sim-url" href="${escapeAttr(firma.url)}" target="_blank" rel="noopener">${escapeHtml(firma.url)} ↗</a>
+      </div>
+      <button class="ocen-btn" type="button">Oceń →</button>
+    </div>
+    <div class="sim-result"></div>
+  </div>`;
+}
+
+async function ocenRow(btn) {
+  const row = btn.closest(".sim-row");
+  const url = row.dataset.url;
+  const box = row.querySelector(".sim-result");
+  btn.disabled = true;
+  btn.textContent = "Oceniam…";
+  box.innerHTML = `<div class="spinner"></div>`;
+  try {
+    const res = await fetch("/api/evaluate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url }),
+    });
+    const data = await res.json();
+    if (data.ok === false) {
+      box.innerHTML = `<p class="sim-err">⚠️ ${escapeHtml(data.error)}</p>`;
+    } else {
+      const score = extractScore(data.result);
+      const badge = score !== null ? `<span class="score-mini ${scoreClass(score)}">${score}/10</span>` : "";
+      box.innerHTML = `${badge}<div class="result-body">${formatText(data.result)}</div>`;
+    }
+  } catch (err) {
+    box.innerHTML = `<p class="sim-err">⚠️ ${escapeHtml(err.message)}</p>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Oceń ponownie";
+  }
 }
 
 // ── Pomocnicze ──

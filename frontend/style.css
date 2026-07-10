@@ -255,6 +255,47 @@ h1 {
 }
 .chat-input button:hover { background: var(--orange-dim); }
 
+/* ── Karty (tabs) ── */
+.tabbar {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 14px;
+  color: var(--muted);
+  transition: color .15s, background .15s;
+}
+.tab:hover { color: var(--text); }
+.tab.active {
+  color: var(--text);
+  background: var(--card-2);
+  border-color: var(--orange);
+  border-bottom: none;
+}
+.tab.active .tab-name { color: var(--orange); font-weight: 600; }
+.tab-close {
+  color: var(--muted);
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  border-radius: 4px;
+}
+.tab-close:hover { color: #fff; background: var(--orange); }
+
 /* ── Podobne firmy ── */
 .similar { margin-top: 16px; }
 .similar .mono { color: var(--orange); margin-bottom: 6px; }
@@ -274,12 +315,16 @@ h1 {
 
 .similar-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
 .sim-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
   background: var(--card-2);
   border: 1px solid var(--border);
   border-radius: 14px;
   padding: 14px 16px;
 }
-.sim-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .sim-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .sim-name { font-weight: 600; font-size: 15px; }
 .sim-url { color: var(--muted); font-size: 13px; text-decoration: none; word-break: break-all; }
@@ -298,24 +343,7 @@ h1 {
 }
 .ocen-btn:hover { background: var(--orange-dim); }
 .ocen-btn:disabled { opacity: .6; cursor: default; }
-
-.sim-result { margin-top: 12px; }
-.sim-result:empty { margin: 0; }
-/* oceniona podobna firma: jej ocena + własny czat, zagnieżdżone w wierszu */
-.sim-result .card { margin-top: 12px; }
-.sim-result .card:first-child { margin-top: 0; }
-.score-mini {
-  display: inline-block;
-  font-weight: 700;
-  font-size: 15px;
-  padding: 3px 10px;
-  border-radius: 10px;
-  margin-bottom: 10px;
-}
-.score-mini.good { background: rgba(240,78,42,.15); color: var(--orange); border: 1px solid rgba(240,78,42,.4); }
-.score-mini.mid  { background: rgba(230,180,60,.12); color: #e6b43c; border: 1px solid rgba(230,180,60,.35); }
-.score-mini.bad  { background: rgba(140,140,150,.1); color: var(--muted); border: 1px solid var(--border); }
-.sim-err { color: var(--muted); font-size: 14px; margin: 6px 0 0; }
+.sim-err { color: var(--muted); font-size: 14px; margin: 6px 0 0; width: 100%; }
 
 /* ── Footer ── */
 .foot { justify-content: center; padding-top: 44px; font-size: 11px; }

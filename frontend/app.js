@@ -1,12 +1,13 @@
-// Partner Finder — frontend logic
+// Partner Finder — frontend (workspace z kartami)
 const form = document.getElementById("form");
 const urlInput = document.getElementById("url");
 const btn = document.getElementById("btn");
 const output = document.getElementById("output");
 
-let mainCid = null; // conversation_id głównej firmy (do szukania podobnych)
+let tabs = [];       // [{id, nazwa, url}] — do paska kart
+let activeId = null; // aktywna karta
+let tabSeq = 0;      // licznik id kart
 
-// podpowiedzi w czacie — pokazują userowi, o co MOŻE pytać
 const SUGESTIE = [
   "Rozwiń synergię dla tej firmy",
   "Jak zbić ich najczęstsze obiekcje?",
@@ -14,7 +15,7 @@ const SUGESTIE = [
   "Który model współpracy najlepszy i dlaczego?",
 ];
 
-// ── Ocena głównej firmy ──
+// ── Ocena głównej firmy (nowa sesja researchu) ──
 form.addEventListener("submit", async (e) => {
   e.preventDefault();
   let url = urlInput.value.trim();
@@ -24,15 +25,17 @@ form.addEventListener("submit", async (e) => {
   output.hidden = false;
   output.innerHTML = loadingHTML();
   btn.disabled = true;
-  mainCid = null;
 
   try {
     const data = await evaluate(url);
     if (data.ok === false) {
       output.innerHTML = errorHTML(data.error);
     } else {
-      mainCid = data.conversation_id;
-      output.innerHTML = companyBlockHTML(data.result, url, data.conversation_id) + similarHTML();
+      // reset workspace i otwórz pierwszą kartę
+      tabs = [];
+      activeId = null;
+      output.innerHTML = `<div id="tabbar" class="tabbar"></div><div id="panels"></div>`;
+      openTab(data.result, url, data.conversation_id);
     }
   } catch (err) {
     output.innerHTML = errorHTML(err.message);
@@ -50,31 +53,82 @@ async function evaluate(url) {
   return res.json();
 }
 
-// ── Event delegation (jeden listener na wszystkie firmy/czaty) ──
+// ── Karty ──
+function openTab(result, url, cid) {
+  const id = "tab" + ++tabSeq;
+  tabs.push({ id, nazwa: labelFromUrl(url), url });
+  document.getElementById("panels").insertAdjacentHTML("beforeend", panelHTML(id, result, url, cid));
+  setActive(id);
+}
+
+function setActive(id) {
+  activeId = id;
+  document.querySelectorAll("#panels .panel").forEach((p) => {
+    p.style.display = p.dataset.id === id ? "block" : "none";
+  });
+  renderTabBar();
+}
+
+function closeTab(id) {
+  tabs = tabs.filter((t) => t.id !== id);
+  document.querySelector(`#panels .panel[data-id="${id}"]`)?.remove();
+  if (activeId === id) {
+    activeId = tabs.length ? tabs[tabs.length - 1].id : null;
+    if (activeId) setActive(activeId);
+    else renderTabBar();
+  } else {
+    renderTabBar();
+  }
+}
+
+function renderTabBar() {
+  const bar = document.getElementById("tabbar");
+  if (!bar) return;
+  bar.innerHTML = tabs
+    .map(
+      (t) => `<div class="tab ${t.id === activeId ? "active" : ""}" data-id="${t.id}">
+        <span class="tab-name">${escapeHtml(t.nazwa)}</span>
+        <span class="tab-close" data-close="${t.id}" title="Zamknij">×</span>
+      </div>`
+    )
+    .join("");
+}
+
+// panel karty = ocena + czat + sekcja "podobne"
+function panelHTML(id, result, url, cid) {
+  return `<div class="panel" data-id="${id}" data-cid="${escapeAttr(cid)}">
+    ${resultHTML(result, url)}
+    ${chatBlockHTML(cid)}
+    ${similarHTML()}
+  </div>`;
+}
+
+// ── Event delegation ──
+output.addEventListener("click", (e) => {
+  const closeEl = e.target.closest(".tab-close");
+  if (closeEl) { closeTab(closeEl.dataset.close); return; }
+  const tabEl = e.target.closest(".tab");
+  if (tabEl) { setActive(tabEl.dataset.id); return; }
+  if (e.target.classList.contains("find-btn")) { findSimilar(e.target); return; }
+  if (e.target.classList.contains("ocen-btn")) { ocenRow(e.target); return; }
+  if (e.target.classList.contains("chip")) {
+    sendChat(e.target.closest(".chat-block"), e.target.textContent);
+  }
+});
+
 output.addEventListener("submit", (e) => {
   if (e.target.classList.contains("chat-form")) {
     e.preventDefault();
-    const block = e.target.closest(".chat-block");
     const input = e.target.querySelector(".chat-text");
     const msg = input.value.trim();
     if (msg) {
       input.value = "";
-      sendChat(block, msg);
+      sendChat(e.target.closest(".chat-block"), msg);
     }
   }
 });
 
-output.addEventListener("click", (e) => {
-  if (e.target.classList.contains("chip")) {
-    sendChat(e.target.closest(".chat-block"), e.target.textContent);
-  } else if (e.target.id === "find-similar") {
-    findSimilar();
-  } else if (e.target.classList.contains("ocen-btn")) {
-    ocenRow(e.target);
-  }
-});
-
-// ── Bloki widoku ──
+// ── Widoki ──
 function loadingHTML() {
   return `<div class="card loading">
     <div class="spinner"></div>
@@ -87,11 +141,6 @@ function errorHTML(msg) {
     <div class="mono"><span class="sq"></span> BŁĄD</div>
     <p>${escapeHtml(msg)}</p>
   </div>`;
-}
-
-// pełny blok firmy = ocena + własny czat (przypięty do jej conversation_id)
-function companyBlockHTML(text, url, cid) {
-  return resultHTML(text, url) + chatBlockHTML(cid);
 }
 
 function resultHTML(text, url) {
@@ -107,7 +156,7 @@ function resultHTML(text, url) {
   </div>`;
 }
 
-// czat przypięty do KONKRETNEJ firmy (data-cid)
+// ── Czat (przypięty do firmy przez data-cid) ──
 function chatBlockHTML(cid) {
   const chips = SUGESTIE.map((s) => `<button class="chip" type="button">${escapeHtml(s)}</button>`).join("");
   return `<div class="card chat chat-block" data-cid="${escapeAttr(cid)}">
@@ -154,16 +203,17 @@ function msgHTML(who, text) {
 function similarHTML() {
   return `<div class="card similar">
     <div class="mono"><span class="sq"></span> PODOBNE FIRMY</div>
-    <p class="chat-hint">Znajdź firmy z tej samej branży. Scoring (i czat) odpalasz osobno dla każdej —
+    <p class="chat-hint">Znajdź firmy z tej samej branży. Każda oceniona otworzy się w nowej karcie —
       płacisz tylko za te, które Cię interesują.</p>
-    <button id="find-similar" class="find-btn" type="button">🔍 Znajdź 10 podobnych firm</button>
-    <div id="similar-list" class="similar-list"></div>
+    <button class="find-btn" type="button">🔍 Znajdź 10 podobnych firm</button>
+    <div class="similar-list"></div>
   </div>`;
 }
 
-async function findSimilar() {
-  const btnEl = document.getElementById("find-similar");
-  const list = document.getElementById("similar-list");
+async function findSimilar(btnEl) {
+  const panel = btnEl.closest(".panel");
+  const cid = panel.dataset.cid;
+  const list = panel.querySelector(".similar-list");
   btnEl.disabled = true;
   btnEl.textContent = "Szukam podobnych… (~5 s)";
   list.innerHTML = "";
@@ -171,7 +221,7 @@ async function findSimilar() {
     const res = await fetch("/api/similar", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ conversation_id: mainCid }),
+      body: JSON.stringify({ conversation_id: cid }),
     });
     const data = await res.json();
     if (data.ok === false) {
@@ -191,43 +241,41 @@ async function findSimilar() {
 
 function rowHTML(firma) {
   return `<div class="sim-row" data-url="${escapeAttr(firma.url)}">
-    <div class="sim-head">
-      <div class="sim-info">
-        <span class="sim-name">${escapeHtml(firma.nazwa)}</span>
-        <a class="sim-url" href="${escapeAttr(firma.url)}" target="_blank" rel="noopener">${escapeHtml(firma.url)} ↗</a>
-      </div>
-      <button class="ocen-btn" type="button">Oceń →</button>
+    <div class="sim-info">
+      <span class="sim-name">${escapeHtml(firma.nazwa)}</span>
+      <a class="sim-url" href="${escapeAttr(firma.url)}" target="_blank" rel="noopener">${escapeHtml(firma.url)} ↗</a>
     </div>
-    <div class="sim-result"></div>
+    <button class="ocen-btn" type="button">Oceń →</button>
   </div>`;
 }
 
 async function ocenRow(btnEl) {
   const row = btnEl.closest(".sim-row");
   const url = row.dataset.url;
-  const box = row.querySelector(".sim-result");
   btnEl.disabled = true;
-  btnEl.textContent = "Oceniam…";
-  box.innerHTML = `<div class="spinner"></div>`;
+  btnEl.textContent = "Oceniam… (~40 s)";
   try {
     const data = await evaluate(url);
     if (data.ok === false) {
-      box.innerHTML = `<p class="sim-err">⚠️ ${escapeHtml(data.error)}</p>`;
+      btnEl.disabled = false;
       btnEl.textContent = "Oceń ponownie";
+      row.insertAdjacentHTML("beforeend", `<p class="sim-err">⚠️ ${escapeHtml(data.error)}</p>`);
     } else {
-      // ocena + WŁASNY czat tej firmy (jej conversation_id)
-      box.innerHTML = companyBlockHTML(data.result, url, data.conversation_id);
-      btnEl.textContent = "✓ Ocenione";
+      openTab(data.result, url, data.conversation_id); // otwiera nową kartę i przełącza
+      btnEl.textContent = "✓ Otwarto kartę";
     }
   } catch (err) {
-    box.innerHTML = `<p class="sim-err">⚠️ ${escapeHtml(err.message)}</p>`;
-    btnEl.textContent = "Oceń ponownie";
-  } finally {
     btnEl.disabled = false;
+    btnEl.textContent = "Oceń ponownie";
+    row.insertAdjacentHTML("beforeend", `<p class="sim-err">⚠️ ${escapeHtml(err.message)}</p>`);
   }
 }
 
 // ── Pomocnicze ──
+function labelFromUrl(url) {
+  try { return new URL(url).hostname.replace(/^www\./, ""); }
+  catch { return url; }
+}
 function extractScore(text) {
   const m = text.match(/score[:\s]*([0-9]{1,2})/i) || text.match(/\b([0-9]{1,2})\s*\/\s*10\b/);
   if (m) {
